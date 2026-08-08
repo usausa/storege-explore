@@ -38,6 +38,12 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Information, Message = "Directory deleted. bucket=[{Bucket}], path=[{Path}]")]
     public static partial void InfoDirectoryDeleted(this ILogger log, string bucket, string path);
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Bucket root delete rejected. bucket=[{Bucket}]")]
+    public static partial void WarnBucketRootDeleteRejected(this ILogger log, string bucket);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Directory is not empty. bucket=[{Bucket}], path=[{Path}]")]
+    public static partial void WarnDirectoryNotEmpty(this ILogger log, string bucket, string path);
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid rename name. name=[{Name}]")]
     public static partial void WarnInvalidRenameName(this ILogger log, string name);
 

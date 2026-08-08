@@ -52,12 +52,42 @@ public sealed class FileStorageService
         }
 
         var combined = Path.GetFullPath(Path.Combine(bucketPath, relativePath));
-        if (!combined.StartsWith(bucketPath, StringComparison.OrdinalIgnoreCase))
+        if (!IsUnderBucket(bucketPath, combined) || ContainsLink(bucketPath, combined))
         {
             log.WarnPathTraversal(bucketName, relativePath);
             return null;
         }
         return combined;
+    }
+
+    private static bool IsUnderBucket(string bucketPath, string fullPath)
+    {
+        if (String.Equals(fullPath, bucketPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var bucketRoot = Path.EndsInDirectorySeparator(bucketPath)
+            ? bucketPath
+            : bucketPath + Path.DirectorySeparatorChar;
+        return fullPath.StartsWith(bucketRoot, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ContainsLink(string bucketPath, string fullPath)
+    {
+        var current = fullPath;
+        while ((current is not null) && (current.Length > bucketPath.Length))
+        {
+            FileSystemInfo info = Directory.Exists(current) ? new DirectoryInfo(current) : new FileInfo(current);
+            if (info.Exists && (info.LinkTarget is not null))
+            {
+                return true;
+            }
+
+            current = Path.GetDirectoryName(current);
+        }
+
+        return false;
     }
 
     public List<FileItem> GetItems(string bucketName, string relativePath)
@@ -74,6 +104,11 @@ public sealed class FileStorageService
         foreach (var dir in Directory.EnumerateDirectories(fullPath))
         {
             var info = new DirectoryInfo(dir);
+            if (info.LinkTarget is not null)
+            {
+                continue;
+            }
+
             items.Add(new FileItem
             {
                 Name = info.Name,
@@ -86,6 +121,11 @@ public sealed class FileStorageService
         foreach (var file in Directory.EnumerateFiles(fullPath))
         {
             var info = new FileInfo(file);
+            if (info.LinkTarget is not null)
+            {
+                continue;
+            }
+
             items.Add(new FileItem
             {
                 Name = info.Name,
@@ -177,12 +217,18 @@ public sealed class FileStorageService
         log.InfoDirectoryCreated(bucketName, relativePath);
     }
 
-    public void Delete(string bucketName, string relativePath)
+    public void Delete(string bucketName, string relativePath, bool recursive = false)
     {
         var fullPath = ResolvePath(bucketName, relativePath);
         if (fullPath is null)
         {
             throw new InvalidOperationException("Invalid path.");
+        }
+
+        if (String.Equals(fullPath, GetBucketPath(bucketName), StringComparison.OrdinalIgnoreCase))
+        {
+            log.WarnBucketRootDeleteRejected(bucketName);
+            throw new InvalidOperationException("Bucket root can not be deleted.");
         }
 
         if (File.Exists(fullPath))
@@ -192,7 +238,13 @@ public sealed class FileStorageService
         }
         else if (Directory.Exists(fullPath))
         {
-            Directory.Delete(fullPath, recursive: true);
+            if (!recursive && Directory.EnumerateFileSystemEntries(fullPath).Any())
+            {
+                log.WarnDirectoryNotEmpty(bucketName, relativePath);
+                throw new InvalidOperationException("Directory is not empty.");
+            }
+
+            Directory.Delete(fullPath, recursive);
             log.InfoDirectoryDeleted(bucketName, relativePath);
         }
     }
@@ -212,11 +264,10 @@ public sealed class FileStorageService
         }
 
         var parentDir = Path.GetDirectoryName(fullPath)!;
-        var newFullPath = Path.Combine(parentDir, newName);
+        var newFullPath = Path.GetFullPath(Path.Combine(parentDir, newName));
 
-        // Ensure the new path stays within the bucket
         var bucketPath = GetBucketPath(bucketName)!;
-        if (!newFullPath.StartsWith(bucketPath, StringComparison.OrdinalIgnoreCase))
+        if (!IsUnderBucket(bucketPath, newFullPath) || String.Equals(newFullPath, bucketPath, StringComparison.OrdinalIgnoreCase))
         {
             log.WarnRenamePathTraversal(bucketName, relativePath, newName);
             return null;

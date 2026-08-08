@@ -113,16 +113,27 @@ public static class FileEndpoint
         var uploaded = new List<object>();
         foreach (var file in form.Files)
         {
-            var targetPath = string.IsNullOrEmpty(path)
-                ? file.FileName
-                : $"{path}/{file.FileName}";
+            var fileName = GetFileName(file.FileName);
+            if (fileName.Length == 0)
+            {
+                return Results.BadRequest("Invalid file name.");
+            }
+
+            var targetPath = string.IsNullOrEmpty(path) ? fileName : $"{path}/{fileName}";
 
             await using var stream = file.OpenReadStream();
             await storage.SaveFileAsync(bucket, targetPath, stream);
 
-            uploaded.Add(new { name = file.FileName, size = file.Length, path = targetPath });
+            uploaded.Add(new { name = fileName, size = file.Length, path = targetPath });
         }
 
         return Results.Ok(new { uploaded = uploaded.Count, files = uploaded });
+    }
+
+    private static string GetFileName(string value)
+    {
+        var index = value.LastIndexOfAny(['/', '\\']);
+        var name = index >= 0 ? value[(index + 1)..] : value;
+        return (name is "." or "..") ? String.Empty : name;
     }
 }

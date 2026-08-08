@@ -272,7 +272,7 @@ public partial class FileBrowser : IAsyncDisposable
             return Task.CompletedTask;
         }
 
-        Storage.Delete(Bucket, selectedItem.RelativePath);
+        Storage.Delete(Bucket, selectedItem.RelativePath, recursive: true);
         showDeleteConfirm = false;
         selectedItem = null;
         return LoadItems();
