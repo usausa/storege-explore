@@ -119,7 +119,7 @@ public static class FileEndpoint
                 return Results.BadRequest("Invalid file name.");
             }
 
-            var targetPath = string.IsNullOrEmpty(path) ? fileName : $"{path}/{fileName}";
+            var targetPath = String.IsNullOrEmpty(path) ? fileName : $"{path}/{fileName}";
 
             await using var stream = file.OpenReadStream();
             await storage.SaveFileAsync(bucket, targetPath, stream);
@@ -134,6 +134,6 @@ public static class FileEndpoint
     {
         var index = value.LastIndexOfAny(['/', '\\']);
         var name = index >= 0 ? value[(index + 1)..] : value;
-        return (name is "." or "..") ? String.Empty : name;
+        return (name is "." or "..") ? string.Empty : name;
     }
 }

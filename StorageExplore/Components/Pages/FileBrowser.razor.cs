@@ -291,7 +291,7 @@ public partial class FileBrowser : IAsyncDisposable
 
     private Task ConfirmRename()
     {
-        if (renamingItem is null || String.IsNullOrWhiteSpace(renameValue))
+        if ((renamingItem is null) || String.IsNullOrWhiteSpace(renameValue))
         {
             return Task.CompletedTask;
         }
@@ -498,7 +498,7 @@ public partial class FileBrowser : IAsyncDisposable
 
     private List<Breadcrumb> GetBreadcrumbs()
     {
-        if (string.IsNullOrEmpty(Path))
+        if (String.IsNullOrEmpty(Path))
         {
             return [];
         }

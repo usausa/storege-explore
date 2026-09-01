@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using StorageExplore.Models;
 
 #pragma warning disable CA3003
+#pragma warning disable CA1002
 public sealed class FileStorageService
 {
     private readonly ILogger<FileStorageService> log;
@@ -93,7 +94,7 @@ public sealed class FileStorageService
     public List<FileItem> GetItems(string bucketName, string relativePath)
     {
         var fullPath = ResolvePath(bucketName, relativePath);
-        if (fullPath is null || !Directory.Exists(fullPath))
+        if ((fullPath is null) || !Directory.Exists(fullPath))
         {
             return [];
         }
@@ -142,7 +143,7 @@ public sealed class FileStorageService
     public FileItem? GetFileInfo(string bucketName, string relativePath)
     {
         var fullPath = ResolvePath(bucketName, relativePath);
-        if (fullPath is null || !File.Exists(fullPath))
+        if ((fullPath is null) || !File.Exists(fullPath))
         {
             return null;
         }
@@ -161,7 +162,7 @@ public sealed class FileStorageService
     public Stream? OpenRead(string bucketName, string relativePath)
     {
         var fullPath = ResolvePath(bucketName, relativePath);
-        if (fullPath is null || !File.Exists(fullPath))
+        if ((fullPath is null) || !File.Exists(fullPath))
         {
             return null;
         }
@@ -172,7 +173,7 @@ public sealed class FileStorageService
     public async Task<string?> ReadTextAsync(string bucketName, string relativePath, int maxLength = 100_000)
     {
         var fullPath = ResolvePath(bucketName, relativePath);
-        if (fullPath is null || !File.Exists(fullPath))
+        if ((fullPath is null) || !File.Exists(fullPath))
         {
             return null;
         }
@@ -251,7 +252,7 @@ public sealed class FileStorageService
 
     public string? Rename(string bucketName, string relativePath, string newName)
     {
-        if (String.IsNullOrWhiteSpace(newName) || newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        if (String.IsNullOrWhiteSpace(newName) || (newName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0))
         {
             log.WarnInvalidRenameName(newName);
             return null;
@@ -319,3 +320,4 @@ public sealed class FileStorageService
         return (driveInfo.TotalSize, driveInfo.AvailableFreeSpace);
     }
 }
+#pragma warning restore CA1002

@@ -56,7 +56,7 @@ public partial class MainLayout
     private void OnBucketChanged(ChangeEventArgs e)
     {
         var newBucket = e.Value?.ToString() ?? string.Empty;
-        if (newBucket != CurrentBucket && Storage.Buckets.ContainsKey(newBucket))
+        if ((newBucket != CurrentBucket) && Storage.Buckets.ContainsKey(newBucket))
         {
             CurrentBucket = newBucket;
             UpdateStorageInfo();
@@ -66,7 +66,7 @@ public partial class MainLayout
 
     private void OnBucketChangedFromChild(string newBucket)
     {
-        if (newBucket != CurrentBucket && Storage.Buckets.ContainsKey(newBucket))
+        if ((newBucket != CurrentBucket) && Storage.Buckets.ContainsKey(newBucket))
         {
             CurrentBucket = newBucket;
             UpdateStorageInfo();
