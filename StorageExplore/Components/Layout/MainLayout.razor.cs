@@ -41,7 +41,7 @@ public partial class MainLayout
 
     protected override void OnInitialized()
     {
-        BucketNames = Storage.Buckets.Keys.ToList();
+        BucketNames = [.. Storage.Buckets.Keys];
         if (BucketNames.Count > 0)
         {
             CurrentBucket = BucketNames[0];
